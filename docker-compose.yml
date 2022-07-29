@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres
+    env_file: ./.env
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: project
+    ports: 
+      - '5433:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  app:
+    depends_on:
+      - postgres
+    command: sh -c -f "yarn mikro-orm schema:update --run&&yarn run start:prod"
+    build:
+      context: .
+      target: builder
+    restart: unless-stopped
+    env_file: ./.env
+    ports:
+      - $port:$port
+    stdin_open: true
+    environment:
+      - $db_url:$db_url
+    tty: true
+volumes: 
+    db:
